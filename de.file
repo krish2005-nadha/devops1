@@ -1,0 +1,262 @@
+==============================
+DEVOPS LAB ALL EXPERIMENTS
+==============================
+
+-----------------------------------
+1. MAVEN BUILD PIPELINE IN AZURE
+-----------------------------------
+
+pom.xml
+
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>demo</groupId>
+  <artifactId>mavenapp</artifactId>
+  <version>1.0</version>
+</project>
+
+
+azure-pipelines.yml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean package'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'target'
+    ArtifactName: 'drop'
+
+
+-----------------------------------
+2. REGRESSION TESTING PIPELINE
+-----------------------------------
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'test'
+    publishJUnitResults: true
+
+
+-----------------------------------
+3. INSTALL JENKINS ON CLOUD VM
+-----------------------------------
+
+sudo apt update
+sudo apt install openjdk-11-jdk -y
+sudo apt install jenkins -y
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+
+
+-----------------------------------
+4. CI PIPELINE USING JENKINS
+-----------------------------------
+
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+    }
+}
+
+
+-----------------------------------
+5. CD PIPELINE USING JENKINS
+-----------------------------------
+
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deployment Successful'
+            }
+        }
+    }
+}
+
+
+-----------------------------------
+6. BUILD JAVA APPLICATION USING GRADLE
+-----------------------------------
+
+Simple.java
+
+public class Simple {
+
+    public static void main(String[] args) {
+
+        System.out.println("Hello Gradle");
+    }
+}
+
+
+build.gradle
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'Simple'
+}
+
+
+Commands
+
+sudo apt install gradle -y
+
+mkdir gradleapp
+cd gradleapp
+
+mkdir -p src/main/java
+
+gradle build
+gradle run
+
+
+-----------------------------------
+7. DEPLOY WEB APPLICATION USING ANSIBLE
+-----------------------------------
+
+hosts
+
+[web]
+localhost ansible_connection=local
+
+
+playbook.yml
+
+- hosts: web
+  become: yes
+
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Start Apache
+      service:
+        name: apache2
+        state: started
+
+
+Command
+
+ansible-playbook -i hosts playbook.yml
+
+
+-----------------------------------
+8. CONFIGURE ANSIBLE ROLES
+-----------------------------------
+
+site.yml
+
+- hosts: web
+  become: yes
+
+  roles:
+    - apache
+
+
+roles/apache/tasks/main.yml
+
+- name: Install Apache
+  apt:
+    name: apache2
+    state: present
+
+
+hosts
+
+[web]
+localhost ansible_connection=local
+
+
+Commands
+
+ssh-keygen
+ssh-copy-id localhost
+
+ansible-playbook -i hosts site.yml --ask-become-pass
+
+
+-----------------------------------
+IMPORTANT COMMANDS
+-----------------------------------
+
+Maven
+
+mvn clean package
+mvn test
+
+
+Gradle
+
+gradle build
+gradle run
+
+
+Ansible
+
+ansible-playbook -i hosts playbook.yml
+
+
+Azure DevOps
+
+Pipelines → Create Pipeline → Save and Run
+
+
+Jenkins
+
+Build Now
+Pipeline Script
